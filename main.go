@@ -5,91 +5,65 @@ import (
 	"log"
 	"os"
 
-	botapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	. "github.com/butbkadrug/advanced-telegram-bot-go/internal/handlers"
+	tblib "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/joho/godotenv"
 )
 
-const(
-    start = "start"
-    help = "help"
-)
-
-func main(){
-
-    if err := godotenv.Load(); err != nil {
-        log.Fatal("Failed to load the enviroment: ", err)
-    }
-
-    key := os.Getenv("TESTBOT_API_KEY")
-
-    bot, err := botapi.NewBotAPI(key)
-
-    if err != nil {
-        log.Fatal("Failed to start a bot: ", err)
-    }
-
-    u := botapi.NewUpdate(0)
-    u.Timeout = 60
-
-    updates := bot.GetUpdatesChan(u)
-
-
-
-    for update := range updates {
-        fmt.Println(update)
-        var msg botapi.MessageConfig
-
-        if update.Message == nil && update.Message.IsCommand() {
-
-            CommandHandler(update)
-            continue
-
-        }
-
-
-        buttonOne := botapi.NewKeyboardButton("/help")
-        buttonTwo := botapi.NewKeyboardButton("/troll")
-        row := botapi.NewKeyboardButtonRow(buttonOne, buttonTwo)
-        replyKeyboard := botapi.NewReplyKeyboard(row)
-
-        replyKeyboard.InputFieldPlaceholder = "Select command:"
-        replyKeyboard.ResizeKeyboard = true
-        replyKeyboard.OneTimeKeyboard = true
-
-        fmt.Println("Callback data: ", update.CallbackData())
-        m := botapi.NewMessage(update.Message.From.ID, "Message")
-
-        m.ReplyMarkup = replyKeyboard
-
-        if _, err := bot.Send(msg); err != nil {
-            log.Println("Failed to send the message: ", err)
-        }
-    }
+type bot struct {
+	api *tblib.BotAPI
 }
 
-func CommandHandler(u botapi.Update) {
-    var msg botapi.MessageConfig
-    switch cmd := u.Message.Command(); cmd {
-    case start, help:
-        text := `Hello, welcome to the chatbot.
-I'm a bot that can help you with your daily tasks.
-You can use the following commands:
-/help - to get help
-/troll - to get trolled
-/play - to play a game
-/stop - to stop the game`
 
-        msg = botapi.NewMessage(u.Message.From.ID, text)
+func main() {
+    fmt.Println(Root)
 
-    default:
-        fmt.Println("Unknown command", cmd)
+	var err error
+	var bot bot
 
-        msg = botapi.NewMessage(u.Message.From.ID, "I don't know that command")
-        ibtn1 := botapi.NewInlineKeyboardButtonData("Option one", "1")
-        ibtn2 := botapi.NewInlineKeyboardButtonData("Option two", "2")
 
-        irow := botapi.NewInlineKeyboardRow(ibtn1, ibtn2)
-        ikeyboard := botapi.NewInlineKeyboardMarkup(irow)
-        msg.ReplyMarkup = ikeyboard
-    }
+
+	if err := godotenv.Load(); err != nil {
+		log.Fatal("Failed to load the enviroment: ", err)
+	}
+
+	key := os.Getenv("TESTBOT_API_KEY")
+
+	b, err := tblib.NewBotAPI(key)
+
+	bot.api = b
+
+	if err != nil {
+		log.Fatal("Failed to start a bot: ", err)
+	}
+
+	u := tblib.NewUpdate(0)
+	u.Timeout = 60
+
+	updates := bot.api.GetUpdatesChan(u)
+
+	for update := range updates {
+		var request tblib.Chattable
+
+		fmt.Println(update)
+
+		if update.Message != nil && update.Message.IsCommand() {
+            request, err = Root.Execute(update.Message.Command(), update)
+
+            if err != nil {
+                log.Println("Failed to execute the command: ", err)
+            }
+		}
+
+
+		if request == nil {
+			continue
+		}
+
+		if _, err := bot.api.Send(request); err != nil {
+			log.Println("Failed to send the message: ", err)
+		}
+
+	}
 }
+
