@@ -15,7 +15,8 @@ import (
 var tagsHandler = &Handler{
     Use: "tags",
     Visible: true,
-    Description: "Select one of our popular tags:",
+    Description: `Узнай, какие темы наиболее популярны среди цитат! 🌟 Эта команда отобразит самые популярные теги, чтобы ты мог выбрать интересующую тебя тему.
+`,
     Run: func(upd tblib.Update, args ...[]interface{})(tblib.Chattable, error){
 
         var tags Tags

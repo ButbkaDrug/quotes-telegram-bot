@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -29,13 +30,13 @@ func NewRequestWithContext(r string)([]byte, error) {
    )
 
    if err != nil {
-       return data, err
+       return data, fmt.Errorf("NewRequestWithContext failed: %w", err)
    }
 
    res, err := http.DefaultClient.Do(req)
 
    if err != nil {
-       return data, err
+       return data, fmt.Errorf("NewRequestWithContext: http.DefaultClient failed: %w", err)
    }
 
    defer res.Body.Close()
@@ -43,7 +44,7 @@ func NewRequestWithContext(r string)([]byte, error) {
    data, err = io.ReadAll(res.Body)
 
    if err != nil {
-       return data, err
+       return data, fmt.Errorf("NewRequestWithContext: io.ReadAll failed: %w", err)
    }
 
    return data, nil
@@ -59,10 +60,14 @@ func RandomQuote()(*models.Quote, error) {
     data, err = NewRequestWithContext("random")
 
     if err != nil {
-        return &quote, err
+        return &quote, fmt.Errorf("API: RandomQuote failed: %w", err)
     }
 
     err = json.Unmarshal(data, &quote)
+
+    if err != nil {
+        err = fmt.Errorf("API: RandomQuote fialed to unmarshal: %w", err)
+    }
 
     return &quote, err
 }

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+    "fmt"
 	tblib "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
@@ -10,8 +11,12 @@ var startHandler = &Handler{
 	Description: "Welcome to the bot. Enter the command and we'll rock",
 	Run: func(upd tblib.Update, args ...[]interface{}) (tblib.Chattable, error) {
 
-		var text string
-		text = "Hello, welcome to the quotes. Here is some commands that you can explore:\n\n"
+		var text, cmds string
+        text =`Привет! 👋 Я твой персональный бот для цитат. Я могу поделиться с тобой интересными цитатами. Вот список доступных комманд:
+%s
+С любовью,
+Твой Бот 🤖
+`
 
 		keyboard := tblib.NewReplyKeyboard()
 
@@ -23,8 +28,10 @@ var startHandler = &Handler{
 			row := tblib.NewKeyboardButtonRow(button)
 			keyboard.Keyboard = append(keyboard.Keyboard, row)
 
-			text += h.Use + " - " + h.Description + "\n"
+			cmds += fmt.Sprintf("\n/%s - %s\n", h.Use, h.Description)
 		}
+
+        text = fmt.Sprintf(text, cmds)
 
 		m := tblib.NewMessage(upd.Message.From.ID, text)
 

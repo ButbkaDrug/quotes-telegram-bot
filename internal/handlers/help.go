@@ -7,7 +7,7 @@ import (
 var helpHandler = &Handler {
 	Use:         "help",
 	Visible:     true,
-	Description: "Will show help message.",
+    Description: `Покажет тебе это сообщение.`,
 	Run: func(upd tblib.Update, args ...[]interface{}) (tblib.Chattable, error) {
 
 		return Root.Execute("start", upd)
