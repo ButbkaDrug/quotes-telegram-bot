@@ -39,7 +39,6 @@ func NewBotWithKey(key string) (*bot, error) {
 }
 
 func(b *bot) Run() {
-    var err error
 	u := tblib.NewUpdate(0)
 	u.Timeout = 60
 
@@ -48,45 +47,56 @@ func(b *bot) Run() {
     log.Println("Starting to listen for updates...")
 
 	for update := range updates {
-        log.Printf("%s %s(%d) %v\n",
-            update.Message.From.FirstName,
-            update.Message.From.LastName,
-            update.Message.From.ID,
-            update.FromChat(),
+        b.UpdateHandler(update)
+	}
+}
+
+func(b *bot) UpdateHandler(update tblib.Update) {
+    var err error
+
+    user, err := userbase.GetUser(update.FromChat().ID)
+
+    if err != nil {
+        log.Println("Can't fetch user: ", err)
+        return
+    }
+
+    err = user.UpdateLastVisited(update.FromChat().ID)
+
+    if err != nil {
+        log.Println(err)
+        return
+    }
+
+    var request tblib.Chattable
+
+    if update.Message != nil && update.Message.IsCommand() {
+        request, err = Root.Execute(update, user)
+
+        if err != nil {
+            log.Println("Failed to execute the command: ", err)
+            request = tblib.NewMessage(update.Message.From.ID, "Упс! 😕 Произошла ошибка при попытке получить цитату. Пожалуйста, попробуйте еще раз позже или используйте другие команды. Если проблема сохраняется, обратитесь к администратору бота.")
+        }
+    }
+
+
+    if request == nil {
+        return
+    }
+
+    if _, err := b.api.Send(request); err != nil {
+        log.Println("Failed to send the message: ", err)
+    }
+
+    if title := user.Graduate(); title.Message != "" {
+        m := tblib.NewMessage(
+            update.FromChat().ID,
+            title.Message,
         )
 
-        err = userbase.UpdateUser(update.FromChat().ID)
-
+        _, err := b.api.Send(m)
         if err != nil {
-            log.Println(err)
+            log.Println("Faild to send cheerful message: ", err)
         }
-
-        n, err := userbase.UsersCount()
-
-        if err != nil {
-            log.Println(err)
-        }
-
-        log.Printf("Dataase updated: %d users in database", n)
-		var request tblib.Chattable
-
-		if update.Message != nil && update.Message.IsCommand() {
-            request, err = Root.Execute(update.Message.Command(), update)
-
-            if err != nil {
-                log.Println("Failed to execute the command: ", err)
-                request = tblib.NewMessage(update.Message.From.ID, "Упс! 😕 Произошла ошибка при попытке получить цитату. Пожалуйста, попробуйте еще раз позже или используйте другие команды. Если проблема сохраняется, обратитесь к администратору бота.")
-            }
-		}
-
-
-		if request == nil {
-			continue
-		}
-
-		if _, err := b.api.Send(request); err != nil {
-			log.Println("Failed to send the message: ", err)
-		}
-
-	}
+    }
 }

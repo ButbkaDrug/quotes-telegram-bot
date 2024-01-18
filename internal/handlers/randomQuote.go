@@ -11,6 +11,7 @@ import (
 var RandomQuoteHandler = &Handler{
 	Use:         "random",
 	Visible:     true,
+    Scorable:   true,
 	Description: `Получи вдохновляющую цитату! 📖 Бот выберет случайную цитату для тебя. Просто отправь эту команду, чтобы добавить каплю мудрости в свой день.`,
 	Run: func(upd tblib.Update, args ...[]interface{}) (tblib.Chattable, error) {
 
