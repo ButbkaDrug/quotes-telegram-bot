@@ -7,4 +7,5 @@ require (
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/joho/godotenv v1.5.1
 	github.com/mattn/go-sqlite3 v1.14.6
+	github.com/wit-ai/wit-go v1.0.13
 )

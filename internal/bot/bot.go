@@ -1,20 +1,38 @@
 package bot
 
 import (
-    "fmt"
-    "log"
-    "github.com/butbkadrug/advanced-telegram-bot-go/internal/userbase"
+	"fmt"
+	"log"
+	"net/http"
+	"strings"
+
 	. "github.com/butbkadrug/advanced-telegram-bot-go/internal/handlers"
+	"github.com/butbkadrug/advanced-telegram-bot-go/internal/userbase"
+	"github.com/butbkadrug/advanced-telegram-bot-go/internal/witai"
 	tblib "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 type bot struct {
 	api *tblib.BotAPI
+    wit *witai.Wit
+}
+type Bupdate struct {
+    tblib.Message
+}
+
+func(u Bupdate) Command()string {
+    return u.Message.Command()
+}
+
+func(u Bupdate) Arguments()[]string{
+    return strings.Split(u.Message.CommandArguments(), " ")
 }
 
 func NewBotWithKey(key string) (*bot, error) {
 	var err error
     var bot = &bot{}
+
+    ai := witai.NewWit()
 
     log.Println("Starting a bot...")
 
@@ -34,6 +52,7 @@ func NewBotWithKey(key string) (*bot, error) {
 
 
     bot.api = api
+    bot.wit = ai
 
     return bot, nil
 }
@@ -53,6 +72,7 @@ func(b *bot) Run() {
 
 func(b *bot) UpdateHandler(update tblib.Update) {
     var err error
+    log.Printf("New update: %+v\n", update)
 
     user, err := userbase.GetUser(update.FromChat().ID)
 
@@ -70,8 +90,50 @@ func(b *bot) UpdateHandler(update tblib.Update) {
 
     var request tblib.Chattable
 
+    if update.Message.Voice != nil {
+        var wr witai.WitResponse
+        file, err := b.api.GetFile(tblib.FileConfig{
+            FileID: update.Message.Voice.FileID,
+        })
+
+        if err != nil {
+            log.Println("Can't request file: ", err)
+        }
+
+        link := file.Link(b.api.Token)
+
+        resp, err := http.Get(link)
+
+        if err != nil {
+            log.Println("Can't get file: ", err)
+        }
+
+        defer resp.Body.Close()
+
+        if resp.StatusCode == http.StatusOK{
+            wr, err = b.wit.ParseAudio(resp.Body)
+
+            if err != nil {
+                log.Println(err)
+                return
+            }
+        }
+        r, err := Root.Execute(update.FromChat().ID, wr, user)
+
+        if err != nil {
+            log.Println("Faild fuilfil free text: ", err)
+        } else {
+            request = r
+        }
+    }
+
     if update.Message != nil && update.Message.IsCommand() {
-        request, err = Root.Execute(update, user)
+        u := Bupdate{*update.Message}
+        request, err = Root.Execute(
+            update.FromChat().ID,
+            u,
+            user,
+        )
 
         if err != nil {
             log.Println("Failed to execute the command: ", err)
@@ -79,9 +141,27 @@ func(b *bot) UpdateHandler(update tblib.Update) {
         }
     }
 
+    if update.Message != nil && !update.Message.IsCommand() && update.Message.Text != ""{
+
+        c, err := b.wit.HandleTextMessage(update)
+
+        if err != nil {
+            log.Println("Faild to process text(UpdateHandler):", err)
+        }
+
+        r, err := Root.Execute(update.FromChat().ID, c, user)
+
+        if err != nil {
+            log.Println("Faild fuilfil free text: ", err)
+        } else {
+            request = r
+        }
+    }
+
+
 
     if request == nil {
-        return
+        request = tblib.NewMessage(update.Message.From.ID, "Упс! 😕 Произошла ошибка при попытке получить цитату. Пожалуйста, попробуйте еще раз позже или используйте другие команды. Если проблема сохраняется, обратитесь к администратору бота.")
     }
 
     if _, err := b.api.Send(request); err != nil {

@@ -20,7 +20,13 @@ type Handler struct {
 
     // Run will be executed when user call a comand.
     // And result will be sent as a request to a td server.
-    Run func(tblib.Update, ...[]interface{})(tblib.Chattable, error)
+    Run func(ChatID int64, r HandlerRequest)(tblib.Chattable, error)
+}
+
+
+type HandlerRequest interface {
+    Command() string
+    Arguments() []string
 }
 
 type Handlers struct {
@@ -31,7 +37,7 @@ func(h *Handlers) AddHandler(handler *Handler){
     h.handlers = append(h.handlers, handler)
 }
 
-func (h *Handlers) Execute(u tblib.Update, user *userbase.User) (tblib.Chattable, error) {
+func (h *Handlers) Execute(ChatID int64, req HandlerRequest, user *userbase.User) (tblib.Chattable, error) {
     // Before processing a command I want to interect with user a little bit
     // For example if it is a firt quote for today. I want to cheer him up with
     // a message.
@@ -42,11 +48,10 @@ func (h *Handlers) Execute(u tblib.Update, user *userbase.User) (tblib.Chattable
 
     // For now let test this stuff only if it is me who makes a request.
     var handler = &Handler{}
-    cmd := u.Message.Command()
 
     for _, h := range h.handlers {
 
-        if h.Use == cmd {
+        if h.Use == req.Command() {
             handler = h
         }
     }
@@ -54,16 +59,16 @@ func (h *Handlers) Execute(u tblib.Update, user *userbase.User) (tblib.Chattable
 
     if handler.Run == nil {
         return tblib.NewMessage(
-            u.Message.From.ID,
+            ChatID,
             "Извини, но такой команды не существует...\n\n /help - подскажет тебе наиболее полезные команды.",
         ), nil
     }
 
     if handler.Scorable {
-        user.UpdateTotalRequests(u.FromChat().ID)
+        user.UpdateTotalRequests(ChatID)
     }
 
-    return handler.Run(u)
+    return handler.Run(ChatID, req)
 }
 
 

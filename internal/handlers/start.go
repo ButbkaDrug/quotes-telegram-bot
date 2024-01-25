@@ -10,7 +10,7 @@ var startHandler = &Handler{
 	Visible:     false,
 	Scorable:    false,
 	Description: "Начни с этой команды чтобы узнать, на что я способен🦸",
-	Run: func(upd tblib.Update, args ...[]interface{}) (tblib.Chattable, error) {
+	Run: func(ChatID int64, r HandlerRequest) (tblib.Chattable, error) {
 
 		var text, cmds string
 		text = `Привет! 👋 Я твой персональный бот для цитат. Я могу поделиться с тобой интересными цитатами. Вот список доступных комманд:
@@ -34,7 +34,7 @@ var startHandler = &Handler{
 
 		text = fmt.Sprintf(text, cmds)
 
-		m := tblib.NewMessage(upd.Message.From.ID, text)
+		m := tblib.NewMessage(ChatID, text)
 
 		m.ReplyMarkup = keyboard
 

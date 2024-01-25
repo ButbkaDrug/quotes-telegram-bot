@@ -11,11 +11,11 @@ var statsHandler = &Handler{
 	Visible:     true,
 	Scorable:    false,
 	Description: "Узнай сколько цитат ты уже прочел. И какой твой текущий 👑титул в цитатном мире",
-	Run: func(upd tblib.Update, args ...[]interface{}) (tblib.Chattable, error) {
+	Run: func(ChatID int64, r HandlerRequest) (tblib.Chattable, error) {
 		var text string
-		var m = tblib.NewMessage(upd.Message.From.ID, text)
+		var m = tblib.NewMessage(ChatID, text)
 
-		user, err := userbase.GetUser(upd.FromChat().ID)
+		user, err := userbase.GetUser(ChatID)
 
 		if err != nil {
 			m.Text = "Что-то пошло не так.. Не смог получить ваши данные. Пожалуйста, попробуйте позже..."

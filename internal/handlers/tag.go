@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -17,13 +18,23 @@ var tagHandler = &Handler{
 	Visible:     false,
 	Scorable:    true,
 	Description: "С помощью этой команды, можно получить цитату на определенную тему",
-	Run: func(upd tblib.Update, args ...[]interface{}) (tblib.Chattable, error) {
+	Run: func(ChatID int64, r HandlerRequest) (tblib.Chattable, error) {
 
 		var quote Quote
+        var tag string
 		var text = "С помощью этой команды можно получить цитату на определенную тему\n:"
-		var message = tblib.NewMessage(upd.Message.From.ID, text)
+		var message = tblib.NewMessage(ChatID, text)
 
-		tag := upd.Message.CommandArguments()
+        args := r.Arguments()
+
+        if len(args) < 1 {
+
+            return message, fmt.Errorf("Tag is not found..")
+
+        }
+
+        tag = args[0]
+
 
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		defer cancel()
@@ -70,6 +81,11 @@ var tagHandler = &Handler{
 
 			text += " - " + quote.Source
 		}
+
+
+        if quote.Tags != "" {
+            text += "\n" + quote.Tags
+        }
 
 		message.Text = text
 

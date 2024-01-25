@@ -18,11 +18,11 @@ var tagsHandler = &Handler{
 	Scorable: false,
 	Description: `Узнай, какие темы наиболее популярны среди цитат! 🌟 Эта команда отобразит самые популярные теги, чтобы ты мог выбрать интересующую тебя тему.
 `,
-	Run: func(upd tblib.Update, args ...[]interface{}) (tblib.Chattable, error) {
+	Run: func(ChatID int64, r HandlerRequest) (tblib.Chattable, error) {
 
 		var tags Tags
 		var text = "Выбери из десятки самых популярных тем:\n"
-		var message = tblib.NewMessage(upd.Message.From.ID, text)
+		var message = tblib.NewMessage(ChatID, text)
 
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		defer cancel()

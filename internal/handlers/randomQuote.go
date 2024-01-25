@@ -13,7 +13,7 @@ var RandomQuoteHandler = &Handler{
 	Visible:     true,
     Scorable:   true,
 	Description: `Получи вдохновляющую цитату! 📖 Бот выберет случайную цитату для тебя. Просто отправь эту команду, чтобы добавить каплю мудрости в свой день.`,
-	Run: func(upd tblib.Update, args ...[]interface{}) (tblib.Chattable, error) {
+	Run: func(ChatID int64, req HandlerRequest) (tblib.Chattable, error) {
 
 		var quote = &models.Quote{}
 		quote, err := api.RandomQuote()
@@ -35,7 +35,7 @@ var RandomQuoteHandler = &Handler{
 			text += " - " + quote.Source
 		}
 
-		return tblib.NewMessage(upd.Message.From.ID, text), nil
+		return tblib.NewMessage(ChatID, text), nil
 	},
 }
 
