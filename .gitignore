@@ -48,6 +48,6 @@
 .idea/
 .vscode/
 .DS_Store
-.tdlib/
+.tdlib
 Thumbs.db
 
