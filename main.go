@@ -8,10 +8,6 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// TODO: Add a logger
-// TODO : Add an  option to provide a bot token through a command line arg
-
-
 func main() {
     var key string
 
@@ -19,7 +15,7 @@ func main() {
 		log.Fatal("Failed to load the enviroment: ", err)
 	}
 
-    flag.StringVar(&key, "key", os.Getenv("TESTBOT_API_KEY"), "Telegram bot API key")
+    flag.StringVar(&key, "key", os.Getenv("QUOTE_DRAGON_API_KEY"), "Telegram bot API key")
     flag.Parse()
 
     bot, err := bot.NewBotWithKey(key)

@@ -48,5 +48,6 @@
 .idea/
 .vscode/
 .DS_Store
+.tdlib/
 Thumbs.db
 

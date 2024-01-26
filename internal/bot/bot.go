@@ -84,7 +84,7 @@ func NewBotWithKey(key string) (*bot, error) {
 		return bot, fmt.Errorf("NewBotWithKey: failed to start a bot: %w", err)
 	}
 
-	log.Printf("Bot %s is started\n", api.Info.UserName)
+	log.Printf("%s has started\n", api.Info.UserName)
 
 	bot.api = api
 	bot.wit = ai
