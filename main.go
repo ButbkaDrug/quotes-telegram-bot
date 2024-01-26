@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+    "flag"
     "github.com/butbkadrug/advanced-telegram-bot-go/internal/bot"
 	"github.com/joho/godotenv"
 )
@@ -12,11 +13,14 @@ import (
 
 
 func main() {
+    var key string
+
 	if err := godotenv.Load(); err != nil {
 		log.Fatal("Failed to load the enviroment: ", err)
 	}
 
-	key := os.Getenv("TESTBOT_API_KEY")
+    flag.StringVar(&key, "key", os.Getenv("TESTBOT_API_KEY"), "Telegram bot API key")
+    flag.Parse()
 
     bot, err := bot.NewBotWithKey(key)
 
