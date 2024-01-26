@@ -7,6 +7,8 @@ import (
 	"github.com/joho/godotenv"
 )
 
+// TODO: Add a logger
+// TODO : Add an  option to provide a bot token through a command line arg
 
 
 func main() {

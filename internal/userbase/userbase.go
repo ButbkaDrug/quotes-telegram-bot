@@ -223,6 +223,22 @@ func(u User) TimeJoinedString() string {
 
 }
 
+func (u User) GetStatsString()string {
+    text := fmt.Sprintf("📅 Ты с нами уже %s\n\n", u.TimeJoinedString())
+    text += fmt.Sprintf("📖 Цитат прочитано: %d\n\n", u.Total_requests)
+    text += fmt.Sprintf("🏆 Текущий титул: %s\n\n", u.CurrentTitle().Title)
+    if u.CurrentTitle().Request < Titles[len(Titles) - 1].Request {
+        text += fmt.Sprintf("📚 До следующего титула(%s) осталось %d цитат\n\n",
+            u.NextTitle().Title,
+            u.NextTitle().Request - u.Total_requests,
+        )
+    }
+
+    text += "☀️Молодец, так держвть!"
+
+    return text
+}
+
 func getDatabaseFilepath() (string, error) {
     homeDir, err := os.UserHomeDir()
 
@@ -299,7 +315,7 @@ func connect() (*sql.DB, error){
     return db, nil
 }
 
-func(u *User) UpdateLastVisited(id int64) error {
+func UpdateLastVisited(id int64) error {
 
     db, err := connect()
 
@@ -316,7 +332,7 @@ func(u *User) UpdateLastVisited(id int64) error {
     return nil
 }
 
-func(u *User) UpdateTotalRequests(id int64) error {
+func UpdateTotalRequests(id int64) error {
 
     db, err := connect()
 
@@ -329,8 +345,6 @@ func(u *User) UpdateTotalRequests(id int64) error {
     if err != nil {
         return fmt.Errorf("UpdateUser failed: %w", err)
     }
-
-    u.Total_requests++
 
     return nil
 }
